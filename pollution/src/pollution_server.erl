@@ -11,6 +11,9 @@
 
 %% API
 -export([
+  init/0,
+  crash/0,
+  start_link/0,
   start/0,
   stop/0,
   addStation/2,
@@ -21,7 +24,6 @@
   getDailyMean/2,
   getHourlyStationData/2
 ]).
--export([init/0]).
 
 -record(monitor, {stations = []}).
 
@@ -35,18 +37,25 @@ loop(Monitor) ->
         false -> Pid ! {reply, Result},
           loop(Monitor)
       end;
-    stop -> ok
+    stop -> ok;
+    crash -> 1 / 0
   end.
 
 %%init() -> Monitor = erlang:apply(pollution, createMonitor, []),
-init() -> Monitor = pollution:createMonitor(),
-  loop(Monitor).
+%%init() -> Monitor = pollution:createMonitor(),
+%%  loop(Monitor).
+init() -> loop(pollution:createMonitor()).
 
-start() -> register(pollutionServer, spawn_link(?MODULE, init, [])).
+start() -> register(pollutionServer, spawn(?MODULE, init, [])).
+
+start_link() -> register(pollutionServer, spawn_link(?MODULE, init, [])).
+%%  timer:sleep(10).
 %%start() -> Pid = spawn(pollution_server, init, []),
 %%  Pid.
 
-stop() -> pollution_server ! stop.
+stop() -> pollutionServer ! stop.
+
+crash() -> pollutionServer ! crash.
 
 %%init() -> Monitor = pollution:createMonitor(),
 
